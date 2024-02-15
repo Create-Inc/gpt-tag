@@ -1,0 +1,8 @@
+{
+  "name": "@gpt-tag/workspace",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "packageManager": "yarn@4.1.0"
+}
