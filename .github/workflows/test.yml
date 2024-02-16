@@ -9,6 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - run: corepack enable
+
       - name: Use Node.js
         env:
           SKIP_YARN_COREPACK_CHECK: true
