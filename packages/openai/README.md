@@ -1,16 +1,6 @@
-# gpt-tag
+# @gpt-tag/openai
 
-`gpt-tag` is a library for building applications that rely on LLMs. It's designed to be easily composable within your existing application.
-
-Use one of the specific LLM based packages to get started, such as [`@gpt-tag/openai`](./packages/openai/README.md)
-
-## Installation
-
-Install `@gpt-tag/openai` and make sure you have installed `openai` as well.
-
-```bash
-yarn install @gpt-tag/openai openai
-```
+`@gpt-tag/openai` is the OpenAI specific version of `gpt-tag`. It's designed to be easily composable within your existing application, and leaves code organization and control up to your code.
 
 ## Basic Usage
 

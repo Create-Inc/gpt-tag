@@ -1,5 +1,13 @@
 {
   "name": "@gpt-tag/openai",
+  "description": "A library for building OpenAI powered applications using template strings",
+  "keywords": [
+    "openai",
+    "llm",
+    "gpt",
+    "gpt-3",
+    "gpt-4"
+  ],
   "version": "0.0.1",
   "license": "MIT",
   "exports": {
