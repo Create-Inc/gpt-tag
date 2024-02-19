@@ -12,6 +12,12 @@ Install `@gpt-tag/openai` and make sure you have installed `openai` as well.
 npm install @gpt-tag/openai openai
 ```
 
+or
+
+```bash
+yarn add @gpt-tag/openai openai
+```
+
 ## Basic Usage
 
 `gpt-tag` libraries use a fluent interface to help provide maximum composability. Simply import `openai` from `@gpt-tag/openai` to start composing.

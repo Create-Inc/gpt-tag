@@ -2,6 +2,20 @@
 
 `@gpt-tag/openai` is the OpenAI specific version of `gpt-tag`. It's designed to be easily composable within your existing application, and leaves code organization and control up to your code.
 
+## Installation
+
+Install `@gpt-tag/openai` and make sure you have installed `openai` as well.
+
+```bash
+npm install @gpt-tag/openai openai
+```
+
+or
+
+```bash
+yarn add @gpt-tag/openai openai
+```
+
 ## Basic Usage
 
 `gpt-tag` libraries use a fluent interface to help provide maximum composability. Simply import `openai` from `@gpt-tag/openai` to start composing.
