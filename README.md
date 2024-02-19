@@ -9,7 +9,7 @@ Use one of the specific LLM based packages to get started, such as [`@gpt-tag/op
 Install `@gpt-tag/openai` and make sure you have installed `openai` as well.
 
 ```bash
-yarn install @gpt-tag/openai openai
+npm install @gpt-tag/openai openai
 ```
 
 ## Basic Usage
