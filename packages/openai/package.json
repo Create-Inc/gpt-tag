@@ -1,6 +1,7 @@
 {
   "name": "@gpt-tag/openai",
   "repository": "github:Create-Inc/gpt-tag",
+  "homepage": "https://github.com/Create-Inc/gpt-tag",
   "description": "A library for building OpenAI powered applications using template strings",
   "keywords": [
     "openai",
