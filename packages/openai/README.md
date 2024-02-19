@@ -4,7 +4,7 @@
 
 ## Basic Usage
 
-`gpt-tag` libraries use a fluent interface to help provide maximum composability. Simply import `openi` from `@gpt-tag/openai` to start composing.
+`gpt-tag` libraries use a fluent interface to help provide maximum composability. Simply import `openai` from `@gpt-tag/openai` to start composing.
 
 ```typescript
 import { openai } from "@gpt-tag/openai";
