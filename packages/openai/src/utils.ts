@@ -41,36 +41,30 @@ export const getValueFromTagChild = async <Options extends GPTOptions>(
   child: TagValue | Var,
   input?: GetOptions<Options>,
 ): Promise<string> => {
-  try {
-    if (util.types.isPromise(child)) {
-      return getValueFromTagChild(await child, input);
-    }
-    if (typeof child === "object" && child) {
-      if (isGPTVariable(child)) {
-        const { name } = child;
-        console.log("name:", name);
-        if (!input || !(name in input.variables)) {
-          throw new Error(`Variable "${name}" not found in input`);
-        }
-        const value = await getValueFromTagChild(
-          // @ts-expect-error
-          input.variables[name] as TagValue,
-          input,
-        );
-        console.log("value:", value);
-        return value;
+  if (util.types.isPromise(child)) {
+    return getValueFromTagChild(await child, input);
+  }
+  if (typeof child === "object" && child) {
+    if (isGPTVariable(child)) {
+      const { name } = child;
+      if (!input || !(name in input.variables)) {
+        throw new Error(`"${name}" variable was not specified`);
       }
-      return `${child}`;
-    } else if (typeof child === "function") {
-      if (isGPTString<Options>(child)) {
-        return `${await child.get(input as GetOptions<Options>)}`;
-      }
-      return `${await getValueFromTagChild(child())}`;
-    } else {
-      return `${await Promise.resolve(child)}`;
+      const value = await getValueFromTagChild(
+        // @ts-expect-error
+        input.variables[name] as TagValue,
+        input,
+      );
+      return value;
     }
-  } catch (e) {
-    return `${e}`;
+    return `${child}`;
+  } else if (typeof child === "function") {
+    if (isGPTString<Options>(child)) {
+      return `${await child.stream(false).get(input as GetOptions<Options>)}`;
+    }
+    return `${await getValueFromTagChild(child())}`;
+  } else {
+    return `${await Promise.resolve(child)}`;
   }
 };
 

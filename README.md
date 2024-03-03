@@ -1,6 +1,6 @@
-# gpt-tag
+# @gpt-tag/openai
 
-`gpt-tag` is a library for building applications that rely on LLMs. It's designed to be easily composable within your existing application.
+`@gpt-tag/openai` is a library for building applications that rely on LLMs. It's designed to be easily composable within your existing application.
 
 Use one of the specific LLM based packages to get started, such as [`@gpt-tag/openai`](./packages/openai/README.md)
 
@@ -57,6 +57,27 @@ const [heightAnswer, iceCreamAnswer] = await Promise.all([
 ```
 
 See [examples](./packages/openai) for more samples of how you can compose tags together.
+
+## Variables
+
+Variables make your tags reusable and composable. You can use the `variable` function to create a variable and then use it in your tags.
+
+```typescript
+import { openai, variable } from "@gpt-tag/openai";
+
+const factual = openai.temperature(0);
+
+const president =
+  factual`Who was president of the ${variable("country")} in ${variable("year")}? Respond with only their name`.get(
+    {
+      variables: {
+        country: "Argentina",
+        year: 2023,
+      },
+    },
+  );
+// Javier Milei
+```
 
 ## Methods
 

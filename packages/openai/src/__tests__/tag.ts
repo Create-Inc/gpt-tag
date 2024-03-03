@@ -3,7 +3,10 @@ import { openai } from "../tag.js";
 import { getTestStreamFromResponse } from "../../test/get-test-stream.js";
 import { processStream } from "../../test/process-stream.js";
 import { EvaluationFunction } from "../types.js";
-import { ChatCompletionChunk } from "openai/resources/chat/completions.mjs";
+import {
+  ChatCompletionChunk,
+  ChatCompletionMessageParam,
+} from "openai/resources/chat/completions.mjs";
 import { Stream } from "openai/streaming.mjs";
 import { variable } from "../variable.js";
 
@@ -35,6 +38,30 @@ function openAICompletionFactory({ content }: { content: string }) {
       },
     ],
   };
+}
+
+/**
+ * Echos the input as output
+ */
+function getMockAsEchoForChat({
+  messages,
+  stream,
+}: {
+  messages: ChatCompletionMessageParam[];
+  stream: boolean;
+}) {
+  const input = messages
+    .map(({ content, role }) => {
+      return `role: ${role}
+content: ${content}`;
+    })
+    .join("\n\n");
+  if (stream) {
+    return getTestStreamFromResponse(input, {
+      delayMs: 2,
+    }) as unknown as Stream<ChatCompletionChunk>;
+  }
+  return openAICompletionFactory({ content: input });
 }
 
 const mockOpenAI = jest.mocked(
@@ -117,44 +144,45 @@ describe("smoke tests", () => {
     await new Promise(process.nextTick);
     expect(evaluation).toHaveBeenCalledTimes(1);
   });
-  it.only("should require variables when specified", async () => {
-    const stream = getTestStreamFromResponse("Hello, how are you?", {
-      delayMs: 2,
-    });
-
-    mockOpenAI.chat.completions.create.mockResolvedValue(
-      stream as unknown as Stream<ChatCompletionChunk>,
+  it("should require variables when specified", async () => {
+    mockOpenAI.chat.completions.create.mockImplementation(
+      // @ts-expect-error
+      getMockAsEchoForChat,
     );
 
     const base = openai.instance(mockOpenAI).stream(true);
-    const other = "spanish";
-    const message = base.user`explain ${variable("topic")} like i'm ${variable("age")} with ${other}`;
-    const a = message.user`test ${variable("test")}`;
-    let b = a.addMessage({
-      content: openai.user`hello ${variable("hi")} world ${variable("hi2")} `,
-      role: "user",
-    });
-
-    const inner = openai.system`hello ${variable("hi3")} world`;
-    const d = b.addMessages([
-      {
-        content: inner,
-        role: "user",
-      },
-    ]);
+    const language = "spanish";
+    const message = base.user`explain ${variable("topic")} like i'm ${variable("age")} in ${language}`;
     expect(
       await processStream(
-        await d.get({
+        await message.get({
           variables: {
-            hi3: "hi",
-            hi2: "hi",
-            hi: "hi",
-            topic: "this",
-            age: "5",
-            test: "hi",
+            topic: "computer sceince",
+            age: 5,
           },
         }),
       ),
-    ).toMatchInlineSnapshot(`"Hello, how are you?"`);
+    ).toMatchInlineSnapshot(`
+"role: user
+content: explain computer sceince like i'm 5 in spanish"
+`);
+  });
+  it("should throw errors when variables are not specified", async () => {
+    mockOpenAI.chat.completions.create.mockImplementation(
+      // @ts-expect-error
+      getMockAsEchoForChat,
+    );
+
+    const base = openai.instance(mockOpenAI).stream(true);
+    const language = "spanish";
+    const message = base.user`explain ${variable("topic")} like i'm ${variable("age")} in ${language}`;
+    await expect(
+  message.get({
+    // @ts-expect-error
+    variables: {
+
+
+      // missing variables
+    } })).rejects.toMatchInlineSnapshot(`[Error: "topic" variable was not specified]`);
   });
 });
