@@ -57,11 +57,13 @@ content: ${content}`;
     })
     .join("\n\n");
   if (stream) {
-    return getTestStreamFromResponse(input, {
-      delayMs: 2,
-    }) as unknown as Stream<ChatCompletionChunk>;
+    return getTestStreamFromResponse(
+      `\n  \n${input.replace(/^/gm, "  # ")}\n`,
+    ) as unknown as Stream<ChatCompletionChunk>;
   }
-  return openAICompletionFactory({ content: input });
+  return openAICompletionFactory({
+    content: `\n  \n${input.replace(/^/gm, "  # ")}\n`,
+  });
 }
 
 const mockOpenAI = jest.mocked(
@@ -152,20 +154,37 @@ describe("smoke tests", () => {
 
     const base = openai.instance(mockOpenAI).stream(true);
     const language = "spanish";
-    const message = base.user`explain ${variable("topic")} like i'm ${variable("age")} in ${language}`;
+    const message = base.system`You only speak in ${variable("language")}`
+      .user`explain ${variable("topic")} like i'm ${variable("age")} in ${variable("language")} in the tone of ${variable("tone")} with a length of ${variable("length")}`;
+    const topicFn = jest.fn(() => "computer sceince");
+    const lengthFn = Promise.resolve(`500 words`);
     expect(
       await processStream(
         await message.get({
           variables: {
-            topic: "computer sceince",
+            language,
+            tone: base.user`Which tone should I use when talking to a 5 year old? Respond with only a single word`,
+            topic: topicFn,
             age: 5,
+            length: lengthFn,
           },
         }),
       ),
     ).toMatchInlineSnapshot(`
-"role: user
-content: explain computer sceince like i'm 5 in spanish"
+"
+  
+  # role: system
+  # content: You only speak in spanish
+  # 
+  # role: user
+  # content: explain computer sceince like i'm 5 in spanish in the tone of 
+  #   
+  #   # role: user
+  #   # content: Which tone should I use when talking to a 5 year old? Respond with only a single word
+  #  with a length of 500 words
+"
 `);
+    expect(topicFn).toHaveBeenCalledTimes(1);
   });
   it("should throw errors when variables are not specified", async () => {
     mockOpenAI.chat.completions.create.mockImplementation(
@@ -177,12 +196,14 @@ content: explain computer sceince like i'm 5 in spanish"
     const language = "spanish";
     const message = base.user`explain ${variable("topic")} like i'm ${variable("age")} in ${language}`;
     await expect(
-  message.get({
-    // @ts-expect-error
-    variables: {
-
-
-      // missing variables
-    } })).rejects.toMatchInlineSnapshot(`[Error: "topic" variable was not specified]`);
+      message.get({
+        // @ts-expect-error
+        variables: {
+          // missing variables
+        },
+      }),
+    ).rejects.toMatchInlineSnapshot(
+      `[Error: "topic" variable was not specified]`,
+    );
   });
 });
