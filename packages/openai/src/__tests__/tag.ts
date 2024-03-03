@@ -166,7 +166,9 @@ describe("smoke tests", () => {
             topic: topicFn,
             age: 5,
             length: lengthFn,
-            // NOTE: age is used in this nested _variable_, and it still resolves properly
+            // NOTE: age is used in this nested _variable_, and it still
+            // resolves properly, though if you reference a variable that is
+            // not defined, it will throw an error
             tone: base.user`Which tone should I use when talking to a ${variable("age")} year old? Respond with only a single word`,
           },
         }),
