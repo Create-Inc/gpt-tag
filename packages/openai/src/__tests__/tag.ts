@@ -163,10 +163,11 @@ describe("smoke tests", () => {
         await message.get({
           variables: {
             language,
-            tone: base.user`Which tone should I use when talking to a 5 year old? Respond with only a single word`,
             topic: topicFn,
             age: 5,
             length: lengthFn,
+            // NOTE: age is used in this nested _variable_, and it still resolves properly
+            tone: base.user`Which tone should I use when talking to a ${variable("age")} year old? Respond with only a single word`,
           },
         }),
       ),
