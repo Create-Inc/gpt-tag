@@ -1,22 +1,23 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, jest } from "@jest/globals";
 import { openai } from "../tag.js";
 import { getTestStreamFromResponse } from "../../test/get-test-stream.js";
 import { processStream } from "../../test/process-stream.js";
-import { EvaluationFunction } from '../types.js';
-import { ChatCompletionChunk } from 'openai/resources/chat/completions.mjs';
-import { Stream } from 'openai/streaming.mjs';
+import { EvaluationFunction } from "../types.js";
+import { ChatCompletionChunk } from "openai/resources/chat/completions.mjs";
+import { Stream } from "openai/streaming.mjs";
+import { variable } from "../variable.js";
 
-jest.unstable_mockModule('openai', () => {
+jest.unstable_mockModule("openai", () => {
   const OpenAI = jest.fn().mockReturnValue({
-      chat: {
-        completions: {
-          create: jest.fn()
-        }
-      }
-    });
+    chat: {
+      completions: {
+        create: jest.fn(),
+      },
+    },
+  });
   return {
     OpenAI,
-  }
+  };
 });
 
 function openAICompletionFactory({ content }: { content: string }) {
@@ -27,16 +28,18 @@ function openAICompletionFactory({ content }: { content: string }) {
     object: "chat.completion" as const,
     choices: [
       {
-        message: { content, role: 'assistant' as const},
+        message: { content, role: "assistant" as const },
         index: 0,
         logprobs: null,
         finish_reason: "stop" as const,
       },
     ],
-  }
-};
+  };
+}
 
-const mockOpenAI = jest.mocked(new (await import('openai')).OpenAI({ apiKey: "test" }));
+const mockOpenAI = jest.mocked(
+  new (await import("openai")).OpenAI({ apiKey: "test" }),
+);
 
 describe("smoke tests", () => {
   it("simple messages are added via template tag", async () => {
@@ -70,7 +73,9 @@ describe("smoke tests", () => {
   });
 
   it("should get contents from mock OpenAI", async () => {
-    mockOpenAI.chat.completions.create.mockResolvedValue(openAICompletionFactory({ content: "Hello, how are you?" }));
+    mockOpenAI.chat.completions.create.mockResolvedValue(
+      openAICompletionFactory({ content: "Hello, how are you?" }),
+    );
     const base = openai.instance(mockOpenAI);
     const result = await base`hi`.get();
     expect(result).toMatchInlineSnapshot(`"Hello, how are you?"`);
@@ -81,7 +86,9 @@ describe("smoke tests", () => {
       delayMs: 2,
     });
 
-    mockOpenAI.chat.completions.create.mockResolvedValue(stream as unknown as Stream<ChatCompletionChunk>)
+    mockOpenAI.chat.completions.create.mockResolvedValue(
+      stream as unknown as Stream<ChatCompletionChunk>,
+    );
 
     const base = openai.instance(mockOpenAI).stream(true);
     const result = await base`hi`.get();
@@ -96,7 +103,9 @@ describe("smoke tests", () => {
       delayMs: 2,
     });
 
-    mockOpenAI.chat.completions.create.mockResolvedValue(stream as unknown as Stream<ChatCompletionChunk>)
+    mockOpenAI.chat.completions.create.mockResolvedValue(
+      stream as unknown as Stream<ChatCompletionChunk>,
+    );
 
     const base = openai
       .instance(mockOpenAI)
@@ -107,5 +116,45 @@ describe("smoke tests", () => {
     expect(response).toMatchInlineSnapshot(`"Hello, how are you?"`);
     await new Promise(process.nextTick);
     expect(evaluation).toHaveBeenCalledTimes(1);
+  });
+  it.only("should require variables when specified", async () => {
+    const stream = getTestStreamFromResponse("Hello, how are you?", {
+      delayMs: 2,
+    });
+
+    mockOpenAI.chat.completions.create.mockResolvedValue(
+      stream as unknown as Stream<ChatCompletionChunk>,
+    );
+
+    const base = openai.instance(mockOpenAI).stream(true);
+    const other = "spanish";
+    const message = base.user`explain ${variable("topic")} like i'm ${variable("age")} with ${other}`;
+    const a = message.user`test ${variable("test")}`;
+    let b = a.addMessage({
+      content: openai.user`hello ${variable("hi")} world ${variable("hi2")} `,
+      role: "user",
+    });
+
+    const inner = openai.system`hello ${variable("hi3")} world`;
+    const d = b.addMessages([
+      {
+        content: inner,
+        role: "user",
+      },
+    ]);
+    expect(
+      await processStream(
+        await d.get({
+          variables: {
+            hi3: "hi",
+            hi2: "hi",
+            hi: "hi",
+            topic: "this",
+            age: "5",
+            test: "hi",
+          },
+        }),
+      ),
+    ).toMatchInlineSnapshot(`"Hello, how are you?"`);
   });
 });

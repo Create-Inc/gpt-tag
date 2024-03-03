@@ -1,12 +1,15 @@
 import util from "node:util";
 import {
   GPTOptions,
+  GPTString,
+  GetOptions,
   Message,
   MessageInput,
   ParseFunction,
   TagValue,
 } from "./types.js";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions.mjs";
+import { Var } from "./variable.js";
 
 export function zip<T>(...arrays: T[][]): T[][] {
   // Find the length of the longest array
@@ -25,19 +28,42 @@ export function zip<T>(...arrays: T[][]): T[][] {
   return zipped;
 }
 
-export const getValueFromTagChild = async (
-  child: TagValue
+const isGPTString = <Options extends GPTOptions>(
+  value: any,
+): value is GPTString<Options> => {
+  return typeof value === "function" && "_isGptString" in value;
+};
+const isGPTVariable = (value: any): value is { _isGptVariable: true } => {
+  return "_isGptVariable" in value;
+};
+
+export const getValueFromTagChild = async <Options extends GPTOptions>(
+  child: TagValue | Var,
+  input?: GetOptions<Options>,
 ): Promise<string> => {
   try {
     if (util.types.isPromise(child)) {
-      return getValueFromTagChild(await child);
+      return getValueFromTagChild(await child, input);
     }
-    // @TODO: when the child is an object, we should probably stringify it
     if (typeof child === "object" && child) {
+      if (isGPTVariable(child)) {
+        const { name } = child;
+        console.log("name:", name);
+        if (!input || !(name in input.variables)) {
+          throw new Error(`Variable "${name}" not found in input`);
+        }
+        const value = await getValueFromTagChild(
+          // @ts-expect-error
+          input.variables[name] as TagValue,
+          input,
+        );
+        console.log("value:", value);
+        return value;
+      }
       return `${child}`;
     } else if (typeof child === "function") {
-      if ("_isGptString" in child) {
-        return `${await child.get()}`;
+      if (isGPTString<Options>(child)) {
+        return `${await child.get(input as GetOptions<Options>)}`;
       }
       return `${await getValueFromTagChild(child())}`;
     } else {
@@ -48,12 +74,15 @@ export const getValueFromTagChild = async (
   }
 };
 
-export const getOpenAIMessageParamFromMessage = async (
-  message: Message
+export const getOpenAIMessageParamFromMessage = async <
+  Options extends GPTOptions,
+>(
+  message: Message,
+  input: GetOptions<Options> | undefined,
 ): Promise<ChatCompletionMessageParam> => {
   if ("children" in message) {
     const processedChildren = await Promise.all(
-      message.children.map((item) => getValueFromTagChild(item))
+      message.children.map((item) => getValueFromTagChild(item, input)),
     );
 
     const content = zip(message.strings, processedChildren).flat().join("");
@@ -101,7 +130,7 @@ export const processArrayCallstack = async ({
 };
 
 export const getMessageFromInput = <Options extends GPTOptions>(
-  message: MessageInput<Options>
+  message: MessageInput<Options>,
 ): Message => {
   if (typeof message === "string") {
     return {

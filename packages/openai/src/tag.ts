@@ -4,6 +4,7 @@ import type {
   GPTOptions,
   GPTString,
   GPTTagMetadata,
+  GetOptions,
   MessageInput,
   ParseFunction,
   TagValue,
@@ -35,11 +36,11 @@ const makeGPTTag = <
     n: undefined;
     debug: false;
     variables: undefined;
-  }
+  },
 >(
   metadata: GPTTagMetadata<Options> = {
     messages: [],
-  }
+  },
 ): GPTString<Options> => {
   const addMessage = (message: MessageInput<Options>) => {
     const tag = makeGPTTag<Options>({
@@ -75,7 +76,10 @@ const makeGPTTag = <
   gpt.arrCallStack = new Array<{ method: string; args: any[] }>();
   gpt.callStack = new Array<{ method: string; args: any[] }>();
   gpt.parse = metadata.parse;
-  gpt.get = async function (this: GPTString<Options>) {
+  gpt.get = async function (
+    this: GPTString<Options>,
+    input: GetOptions<Options> | undefined,
+  ) {
     if (this.cachedRun !== undefined) {
       return this.cachedRun;
     }
@@ -86,8 +90,8 @@ const makeGPTTag = <
 
         const messages: ChatCompletionMessageParam[] = await Promise.all(
           metadata.messages.map(async (message) =>
-            getOpenAIMessageParamFromMessage(message)
-          )
+            getOpenAIMessageParamFromMessage(message, input),
+          ),
         );
         const args: OpenAI.ChatCompletionCreateParamsNonStreaming = {
           temperature: metadata.temperature,
@@ -134,9 +138,9 @@ const makeGPTTag = <
                 Promise.allSettled(
                   evaluations.map(async (evaluation) => {
                     return Promise.resolve(
-                      evaluation(value, aggregatedResponse)
+                      evaluation(value, aggregatedResponse),
                     );
-                  })
+                  }),
                 ).catch(() => {
                   // no-op
                 });
@@ -171,7 +175,7 @@ const makeGPTTag = <
           Promise.allSettled(
             evaluations.map(async (evaluation) => {
               return Promise.resolve(evaluation(value, originalValue));
-            })
+            }),
           ).catch(() => {
             // no-op
           });
@@ -194,7 +198,7 @@ const makeGPTTag = <
           Promise.allSettled(
             evaluations.map(async (evaluation) => {
               return Promise.resolve(evaluation(value, originalValue));
-            })
+            }),
           ).catch(() => {
             // no-op
           });
@@ -247,7 +251,7 @@ const makeGPTTag = <
   };
 
   gpt.transform = <UpdatedReturnValue>(
-    fn: ParseFunction<Awaited<UpdatedReturnValue>>
+    fn: ParseFunction<Awaited<UpdatedReturnValue>>,
   ) => {
     const tag = makeGPTTag<
       Omit<Options, "returns"> & { returns: Awaited<UpdatedReturnValue> }
