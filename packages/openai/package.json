@@ -15,12 +15,12 @@
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/tag.d.ts",
-        "default": "./dist/tag.js"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/tag.d.cts",
-        "default": "./dist/tag.cjs"
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
       }
     },
     "./types": {
