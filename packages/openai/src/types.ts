@@ -1,5 +1,9 @@
 import type { OpenAI } from "openai";
-import type { Var } from "./variable.js";
+
+export interface Var<T extends string = string> {
+  _isGptVariable: true;
+  name: T;
+}
 
 export type GPTOptions<
   Variables extends Var[] | undefined = Var[] | undefined,

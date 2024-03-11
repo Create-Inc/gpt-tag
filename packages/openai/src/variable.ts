@@ -1,7 +1,4 @@
-export interface Var<T extends string = string> {
-  _isGptVariable: true;
-  name: T;
-}
+import { Var } from "./types.js";
 
 export const variable = <T extends string>(name: T): Var<T> => {
   return {
