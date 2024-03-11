@@ -299,15 +299,15 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
      * ```
      */
     instance<T extends OpenAI | unknown>(lib: T): GPTString<Options>;
-    addMessage<MessageOptions extends GPTOptions>(
-      message: MessageInput<MessageOptions>,
+    addMessage<Values extends Var[] | never>(
+      message: MessageInput<GPTOptions<Values>>,
     ): GPTString<{
       n: Options["n"];
       returns: Options["returns"];
       stream: Options["stream"];
       debug: Options["debug"];
       variables: [
-        ...SpreadArrayOrUndefined<MessageOptions["variables"], Var>,
+        ...Values,
         ...SpreadArrayOrUndefined<Options["variables"], Var>,
       ];
     }>;
