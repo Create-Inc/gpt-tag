@@ -201,13 +201,13 @@ export type GptStringImplementation<Options extends GPTOptions> = {
   parse?: ParseFunction<Options["returns"]>;
   callStack: { method: string; args: any[] }[];
   arrCallStack: { method: string; args: any[] }[];
-} & Options["variables"] extends []
+} & (Options["variables"] extends []
   ? {
       get(): Promise<GetReturn<Options>>;
     }
   : {
       get(options: GetOptions<Options>): Promise<GetReturn<Options>>;
-    };
+    });
 
 export type ParseFunction<ReturnValue = unknown> = (
   value: string | null,
@@ -254,170 +254,172 @@ export type GPTTagMetadata<Options extends GPTOptions> = {
   maxTokens?: number;
 };
 
-export type GPTString<Options extends GPTOptions> = {
-  <Values extends (Var | TagValue | undefined)[] | never>(
-    strings?: TemplateStringsArray,
-    ...values: Values
-  ): GPTString<{
-    n: Options["n"];
-    returns: Options["returns"];
-    stream: Options["stream"];
-    debug: Options["debug"];
-    variables: Options["variables"] extends undefined
-      ? Values extends undefined
-        ? undefined
-        : FilterArrayElements<Values, Var>
-      : [
-          ...SpreadArrayOrUndefined<Options["variables"]>,
-          ...FilterArrayElements<Values, Var>,
-        ];
-  }>;
-
-  metadata: GPTTagMetadata<Options>;
-  temperature(
-    temperature: NonNullable<GPTTagMetadata<Options>["temperature"]>,
-  ): GPTString<Options>;
-  model(model: GPTTagMetadata<Options>["model"]): GPTString<Options>;
-  /**
-   * Sets the instance of the OpenAI library that is being used.
-   * @example
-   * ```ts
-   * const base = openai.instance(new OpenAI({
-   *   apiKey: 'YOUR_API_KEY',
-   * }));
-   * ```
-   */
-  instance<T extends OpenAI | unknown>(lib: T): GPTString<Options>;
-  addMessage<MessageOptions extends GPTOptions>(
-    message: MessageInput<MessageOptions>,
-  ): GPTString<{
-    n: Options["n"];
-    returns: Options["returns"];
-    stream: Options["stream"];
-    debug: Options["debug"];
-    variables: [
-      ...SpreadArrayOrUndefined<MessageOptions["variables"], Var>,
-      ...SpreadArrayOrUndefined<Options["variables"], Var>,
-    ];
-  }>;
-  addMessages<Values extends Var[] | never>(
-    messages: MessageInput<GPTOptions<Values>>[],
-  ): GPTString<{
-    n: Options["n"];
-    returns: Options["returns"];
-    stream: Options["stream"];
-    debug: Options["debug"];
-    variables: [
-      ...Values,
-      ...SpreadArrayOrUndefined<Options["variables"], Var>,
-    ];
-  }>;
-
-  /**
-   * Adds a system message to the chat.
-   */
-  system<Values extends (Var | TagValue | undefined)[]>(
-    string?: TemplateStringsArray,
-    ...values: Values
-  ): GPTString<{
-    n: Options["n"];
-    returns: Options["returns"];
-    stream: Options["stream"];
-    debug: Options["debug"];
-    variables: [
-      ...SpreadArrayOrUndefined<Options["variables"]>,
-      ...FilterArrayElements<Values, Var>,
-    ];
-  }>;
-
-  /**
-   * Adds a user message to the chat.
-   */
-  user<Values extends (Var | TagValue | undefined)[]>(
-    string?: TemplateStringsArray,
-    ...values: Values
-  ): GPTString<{
-    n: Options["n"];
-    returns: Options["returns"];
-    stream: Options["stream"];
-    debug: Options["debug"];
-    variables: [
-      ...SpreadArrayOrUndefined<Options["variables"]>,
-      ...FilterArrayElements<Values, Var>,
-    ];
-  }>;
-  /**
-   * Adds an assistant message to the chat.
-   */
-  assistant<Values extends (Var | TagValue | undefined)[]>(
-    string?: TemplateStringsArray,
-    ...values: Values
-  ): GPTString<{
-    n: Options["n"];
-    returns: Options["returns"];
-    stream: Options["stream"];
-    debug: Options["debug"];
-    variables: [
-      ...SpreadArrayOrUndefined<Options["variables"]>,
-      ...FilterArrayElements<Values, Var>,
-    ];
-  }>;
-
-  id(id: string): GPTString<Options>;
-
-  n<N extends number = number>(
-    n: N,
-  ): GPTString<{
-    n: N;
-    returns: Options["returns"];
-    stream: Options["stream"];
-    debug: Options["debug"];
-    variables: Options["variables"];
-  }>;
-  transform<P>(fn: ParseFunction<P>): GPTString<{
-    returns: Awaited<P>;
-    stream: Options["stream"];
-    n: Options["n"];
-    debug: Options["debug"];
-    variables: Options["variables"];
-  }>;
-  stream<S extends boolean = boolean>(
-    stream: S,
-  ): GPTString<{
-    stream: S;
-    n: Options["n"];
-    returns: Options["returns"];
-    debug: Options["debug"];
-    variables: Options["variables"];
-  }>;
-  debug<D extends boolean = boolean>(
-    debug: D,
-  ): GPTString<{
-    debug: D;
-    stream: Options["stream"];
-    n: Options["n"];
-    returns: Options["returns"];
-    variables: Options["variables"];
-  }>;
-  maxTokens<N extends number = number>(
-    maxTokens: N,
-  ): GPTString<{
-    debug: Options["debug"];
-    stream: Options["stream"];
-    n: Options["n"];
-    variables: Options["variables"];
-    returns: Options["returns"];
-  }>;
-  addEvaluation(fn: EvaluationFunction<Options["returns"]>): GPTString<Options>;
-  addEvaluations(
-    fn: EvaluationFunction<Options["returns"]>[],
-  ): GPTString<Options>;
-  getMessages(): Message[];
-} & GptStringImplementation<{
+export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
   returns: Options["returns"];
   stream: Options["stream"];
   debug: Options["debug"];
   variables: Options["variables"];
   n: undefined;
 }> &
-  GPTStringMethods<Options>;
+  GPTStringMethods<Options> & {
+    <Values extends (Var | TagValue | undefined)[] | never>(
+      strings?: TemplateStringsArray,
+      ...values: Values
+    ): GPTString<{
+      n: Options["n"];
+      returns: Options["returns"];
+      stream: Options["stream"];
+      debug: Options["debug"];
+      variables: Options["variables"] extends undefined
+        ? Values extends undefined
+          ? undefined
+          : FilterArrayElements<Values, Var>
+        : [
+            ...SpreadArrayOrUndefined<Options["variables"]>,
+            ...FilterArrayElements<Values, Var>,
+          ];
+    }>;
+
+    metadata: GPTTagMetadata<Options>;
+    temperature(
+      temperature: NonNullable<GPTTagMetadata<Options>["temperature"]>,
+    ): GPTString<Options>;
+    model(model: GPTTagMetadata<Options>["model"]): GPTString<Options>;
+    /**
+     * Sets the instance of the OpenAI library that is being used.
+     * @example
+     * ```ts
+     * const base = openai.instance(new OpenAI({
+     *   apiKey: 'YOUR_API_KEY',
+     * }));
+     * ```
+     */
+    instance<T extends OpenAI | unknown>(lib: T): GPTString<Options>;
+    addMessage<MessageOptions extends GPTOptions>(
+      message: MessageInput<MessageOptions>,
+    ): GPTString<{
+      n: Options["n"];
+      returns: Options["returns"];
+      stream: Options["stream"];
+      debug: Options["debug"];
+      variables: [
+        ...SpreadArrayOrUndefined<MessageOptions["variables"], Var>,
+        ...SpreadArrayOrUndefined<Options["variables"], Var>,
+      ];
+    }>;
+    addMessages<Values extends Var[] | never>(
+      messages: MessageInput<GPTOptions<Values>>[],
+    ): GPTString<{
+      n: Options["n"];
+      returns: Options["returns"];
+      stream: Options["stream"];
+      debug: Options["debug"];
+      variables: [
+        ...Values,
+        ...SpreadArrayOrUndefined<Options["variables"], Var>,
+      ];
+    }>;
+
+    /**
+     * Adds a system message to the chat.
+     */
+    system<Values extends (Var | TagValue | undefined)[]>(
+      string?: TemplateStringsArray,
+      ...values: Values
+    ): GPTString<{
+      n: Options["n"];
+      returns: Options["returns"];
+      stream: Options["stream"];
+      debug: Options["debug"];
+      variables: [
+        ...SpreadArrayOrUndefined<Options["variables"]>,
+        ...FilterArrayElements<Values, Var>,
+      ];
+    }>;
+
+    /**
+     * Adds a user message to the chat.
+     */
+    user<Values extends (Var | TagValue | undefined)[]>(
+      string?: TemplateStringsArray,
+      ...values: Values
+    ): GPTString<{
+      n: Options["n"];
+      returns: Options["returns"];
+      stream: Options["stream"];
+      debug: Options["debug"];
+      variables: [
+        ...SpreadArrayOrUndefined<Options["variables"]>,
+        ...FilterArrayElements<Values, Var>,
+      ];
+    }>;
+    /**
+     * Adds an assistant message to the chat.
+     */
+    assistant<Values extends (Var | TagValue | undefined)[]>(
+      string?: TemplateStringsArray,
+      ...values: Values
+    ): GPTString<{
+      n: Options["n"];
+      returns: Options["returns"];
+      stream: Options["stream"];
+      debug: Options["debug"];
+      variables: [
+        ...SpreadArrayOrUndefined<Options["variables"]>,
+        ...FilterArrayElements<Values, Var>,
+      ];
+    }>;
+
+    id(id: string): GPTString<Options>;
+
+    n<N extends number = number>(
+      n: N,
+    ): GPTString<{
+      n: N;
+      returns: Options["returns"];
+      stream: Options["stream"];
+      debug: Options["debug"];
+      variables: Options["variables"];
+    }>;
+    transform<P>(fn: ParseFunction<P>): GPTString<{
+      returns: Awaited<P>;
+      stream: Options["stream"];
+      n: Options["n"];
+      debug: Options["debug"];
+      variables: Options["variables"];
+    }>;
+    stream<S extends boolean = boolean>(
+      stream: S,
+    ): GPTString<{
+      stream: S;
+      n: Options["n"];
+      returns: Options["returns"];
+      debug: Options["debug"];
+      variables: Options["variables"];
+    }>;
+    debug<D extends boolean = boolean>(
+      debug: D,
+    ): GPTString<{
+      debug: D;
+      stream: Options["stream"];
+      n: Options["n"];
+      returns: Options["returns"];
+      variables: Options["variables"];
+    }>;
+    maxTokens<N extends number = number>(
+      maxTokens: N,
+    ): GPTString<{
+      debug: Options["debug"];
+      stream: Options["stream"];
+      n: Options["n"];
+      variables: Options["variables"];
+      returns: Options["returns"];
+    }>;
+    addEvaluation(
+      fn: EvaluationFunction<Options["returns"]>,
+    ): GPTString<Options>;
+    addEvaluations(
+      fn: EvaluationFunction<Options["returns"]>[],
+    ): GPTString<Options>;
+    getMessages(): Message[];
+  };

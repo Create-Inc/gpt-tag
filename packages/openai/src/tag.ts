@@ -376,7 +376,7 @@ const makeGPTTag = <
   gpt.substr = assignStringMethod("substr");
   gpt.valueOf = assignStringMethod("valueOf");
 
-  return gpt;
+  return gpt as any;
 };
 
 export const openai = makeGPTTag();
