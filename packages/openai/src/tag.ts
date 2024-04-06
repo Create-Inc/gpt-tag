@@ -276,6 +276,18 @@ const makeGPTTag = <
     return tag;
   };
 
+  gpt.stop = <S extends string | string[] | undefined>(stop: S) => {
+    const tag = makeGPTTag<
+      Omit<Options, "stop"> & {
+        stop: S;
+      }
+    >({
+      ...gpt.metadata,
+      stop,
+    });
+    return tag;
+  };
+
   gpt.debug = <D extends boolean = boolean>(debug: D) => {
     const tag = makeGPTTag<
       Omit<Options, "debug"> & {
