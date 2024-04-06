@@ -13,6 +13,7 @@ export type GPTOptions<
   stream: boolean;
   debug: boolean;
   variables: Variables;
+  stop: string | string[] | undefined;
 };
 
 type Filter<T, U> = T extends U ? T : never;
@@ -253,6 +254,7 @@ export type GPTTagMetadata<Options extends GPTOptions> = {
   n?: Options["n"];
   parse?: ParseFunction<Options["returns"]>;
   stream?: Options["stream"];
+  stop?: Options["stop"];
   debug?: Options["debug"];
   instance?: OpenAI;
   maxTokens?: number;
@@ -264,6 +266,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
   debug: Options["debug"];
   variables: Options["variables"];
   n: undefined;
+  stop: Options["stop"];
 }> &
   GPTStringMethods<Options> & {
     <Values extends (Var | TagValue | undefined)[] | never>(
@@ -282,6 +285,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
             ...SpreadArrayOrUndefined<Options["variables"]>,
             ...FilterArrayElements<Values, Var>,
           ];
+      stop: Options["stop"];
     }>;
 
     metadata: GPTTagMetadata<Options>;
@@ -310,6 +314,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
         ...Values,
         ...SpreadArrayOrUndefined<Options["variables"], Var>,
       ];
+      stop: Options["stop"];
     }>;
     addMessages<Values extends Var[] | never>(
       messages: MessageInput<GPTOptions<Values>>[],
@@ -322,6 +327,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
         ...Values,
         ...SpreadArrayOrUndefined<Options["variables"], Var>,
       ];
+      stop: Options["stop"];
     }>;
 
     /**
@@ -339,6 +345,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
         ...SpreadArrayOrUndefined<Options["variables"]>,
         ...FilterArrayElements<Values, Var>,
       ];
+      stop: Options["stop"];
     }>;
 
     /**
@@ -356,6 +363,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
         ...SpreadArrayOrUndefined<Options["variables"]>,
         ...FilterArrayElements<Values, Var>,
       ];
+      stop: Options["stop"];
     }>;
     /**
      * Adds an assistant message to the chat.
@@ -372,6 +380,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
         ...SpreadArrayOrUndefined<Options["variables"]>,
         ...FilterArrayElements<Values, Var>,
       ];
+      stop: Options["stop"];
     }>;
 
     id(id: string): GPTString<Options>;
@@ -384,6 +393,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
       stream: Options["stream"];
       debug: Options["debug"];
       variables: Options["variables"];
+      stop: Options["stop"];
     }>;
     transform<P>(fn: ParseFunction<P>): GPTString<{
       returns: Awaited<P>;
@@ -391,6 +401,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
       n: Options["n"];
       debug: Options["debug"];
       variables: Options["variables"];
+      stop: Options["stop"];
     }>;
     stream<S extends boolean = boolean>(
       stream: S,
@@ -398,6 +409,17 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
       stream: S;
       n: Options["n"];
       returns: Options["returns"];
+      debug: Options["debug"];
+      variables: Options["variables"];
+      stop: Options["stop"];
+    }>;
+    stop<S extends string | string[] | undefined>(
+      stop: S,
+    ): GPTString<{
+      stop: S;
+      n: Options["n"];
+      returns: Options["returns"];
+      stream: Options["stream"];
       debug: Options["debug"];
       variables: Options["variables"];
     }>;
@@ -409,6 +431,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
       n: Options["n"];
       returns: Options["returns"];
       variables: Options["variables"];
+      stop: Options["stop"];
     }>;
     maxTokens<N extends number = number>(
       maxTokens: N,
@@ -418,6 +441,7 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
       n: Options["n"];
       variables: Options["variables"];
       returns: Options["returns"];
+      stop: Options["stop"];
     }>;
     addEvaluation(
       fn: EvaluationFunction<Options["returns"]>,
