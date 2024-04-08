@@ -36,6 +36,7 @@ const makeGPTTag = <
     n: undefined;
     debug: false;
     variables: undefined;
+    stop: undefined;
   },
 >(
   metadata: GPTTagMetadata<Options> = {
@@ -85,7 +86,7 @@ const makeGPTTag = <
     }
     this.cachedRun = new Promise(async (resolve, reject) => {
       try {
-        const { n, evaluations = [], maxTokens } = metadata;
+        const { n, evaluations = [], maxTokens, stop } = metadata;
         const instance = metadata.instance || getDefaultOpenAIInstance();
 
         const messages: ChatCompletionMessageParam[] = await Promise.all(
@@ -99,6 +100,7 @@ const makeGPTTag = <
           n: n ?? 1,
           messages,
           max_tokens: maxTokens,
+          stop,
         };
         const stream = metadata.stream;
         if (!!stream) {
@@ -270,6 +272,18 @@ const makeGPTTag = <
     >({
       ...gpt.metadata,
       stream,
+    });
+    return tag;
+  };
+
+  gpt.stop = <S extends string | string[] | undefined>(stop: S) => {
+    const tag = makeGPTTag<
+      Omit<Options, "stop"> & {
+        stop: S;
+      }
+    >({
+      ...gpt.metadata,
+      stop,
     });
     return tag;
   };
