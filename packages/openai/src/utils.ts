@@ -7,9 +7,9 @@ import {
   MessageInput,
   ParseFunction,
   TagValue,
+  Var,
 } from "./types.js";
 import { ChatCompletionMessageParam } from "openai/resources/chat/completions.mjs";
-import { Var } from "./variable.js";
 
 export function zip<T>(...arrays: T[][]): T[][] {
   // Find the length of the longest array
@@ -121,50 +121,4 @@ export const processArrayCallstack = async ({
     return values.map((value) => (parse ? parse(value) : value));
   }
   throw new Error(`Cannot call "${call?.method}" on GPTStringArray`);
-};
-
-export const getMessageFromInput = <Options extends GPTOptions>(
-  message: MessageInput<Options>,
-): Message => {
-  if (typeof message === "string") {
-    return {
-      role: "user" as const,
-      strings: [message],
-      children: [],
-    };
-  }
-  if ("_isGptString" in message) {
-    return {
-      role: "user" as const,
-      strings: [],
-      children: [message],
-    };
-  }
-  if (
-    typeof message.content === "function" &&
-    "_isGptString" in message.content
-  ) {
-    const { content, ...rest } = message;
-    return {
-      ...rest,
-      strings: [],
-      children: [message.content],
-    };
-  }
-  if (typeof message.content === "string") {
-    return {
-      ...message,
-      strings: [message.content],
-      children: [],
-    };
-  }
-  if (Array.isArray(message.content)) {
-    return message as Message;
-  }
-  const { content, ...rest } = message;
-  return {
-    children: [],
-    strings: [],
-    ...rest,
-  };
 };

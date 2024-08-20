@@ -11,10 +11,10 @@ import type {
 } from "./types.js";
 import {
   getOpenAIMessageParamFromMessage,
-  getMessageFromInput,
   processArrayCallstack,
   processCallstack,
 } from "./utils.js";
+import { getMessageFromInput } from "./_unsafeUtils.js";
 import { DEFAULT_MODEL } from "./constants.js";
 import { ChatCompletionMessageParam } from "openai/resources/index";
 
