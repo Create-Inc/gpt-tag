@@ -72,7 +72,7 @@ export const getOpenAIMessageParamFromMessage = async <
   Options extends GPTOptions,
 >(
   message: Message,
-  input: GetOptions<Options> | undefined,
+  input?: GetOptions<Options>,
 ): Promise<ChatCompletionMessageParam> => {
   if ("children" in message) {
     const processedChildren = await Promise.all(
