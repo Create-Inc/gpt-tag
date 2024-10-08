@@ -258,6 +258,7 @@ export type GPTTagMetadata<Options extends GPTOptions> = {
   debug?: Options["debug"];
   instance?: OpenAI;
   maxTokens?: number;
+  responseFormat?: OpenAI.Chat.ChatCompletionCreateParams['response_format'];
 };
 
 export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
