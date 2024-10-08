@@ -101,6 +101,7 @@ const makeGPTTag = <
           messages,
           max_tokens: maxTokens,
           stop,
+          response_format: metadata.responseFormat
         };
         const stream = metadata.stream;
         if (!!stream) {
@@ -225,6 +226,10 @@ const makeGPTTag = <
   };
   gpt.temperature = (temperature: number) => {
     const tag = makeGPTTag<Options>({ ...gpt.metadata, temperature });
+    return tag;
+  };
+  gpt.responseFormat = (responseFormat: OpenAI.Chat.ChatCompletionCreateParams['response_format']) => {
+    const tag = makeGPTTag<Options>({ ...gpt.metadata, responseFormat });
     return tag;
   };
   gpt.model = (model: string) => {
