@@ -66,7 +66,7 @@
     "tsup": "^8.0.2",
     "tsx": "~4.7.1",
     "typescript": "^5.3.3",
-    "zod": "^3.28.8"
+    "zod": "^3.23.8"
   },
   "peerDependencies": {
     "openai": "^4.67.2"
