@@ -36,10 +36,10 @@ async function writeToConsole(newContent: string) {
   latest = "";
   console.clear();
   await new Promise<void>((resolve) =>
-    process.stdout.cursorTo(0, 0, () => resolve())
+    process.stdout.cursorTo(0, 0, () => resolve()),
   );
   await new Promise<void>((resolve) =>
-    process.stdout.clearLine(0, () => resolve())
+    process.stdout.clearLine(0, () => resolve()),
   );
   console.log(currentLine);
 }
@@ -48,10 +48,10 @@ async function updateLatest(newContent: string) {
   latest = newContent;
   console.clear();
   await new Promise<void>((resolve) =>
-    process.stdout.cursorTo(0, 0, () => resolve())
+    process.stdout.cursorTo(0, 0, () => resolve()),
   );
   await new Promise<void>((resolve) =>
-    process.stdout.clearLine(0, () => resolve())
+    process.stdout.clearLine(0, () => resolve()),
   );
   console.log(currentLine + "\n" + latest);
 }
@@ -86,7 +86,7 @@ const getTableString = async <Options extends GPTOptions>({
           const color = values.get(v) || "white";
           // @ts-expect-error
           return `${colors[color].underline(`${v}`)}`;
-        })
+        }),
       );
       content = zip(strings, processedChildren).flat().join("");
     } else {
@@ -145,12 +145,12 @@ const getTableString = async <Options extends GPTOptions>({
             ...(typeof metadata.stream === "boolean" && !!metadata.stream
               ? [`streaming`]
               : []),
-          ].join(" ")
+          ].join(" "),
         ),
         hAlign: "right",
         colSpan: 2,
       },
-    ]
+    ],
   );
   return table.toString();
 };
@@ -180,7 +180,7 @@ export const debugStream = async <Options extends GPTOptions>({
       const { done, value } = await reader.read();
       if (done) break;
       const chunk = JSON.parse(
-        new TextDecoder().decode(value)
+        new TextDecoder().decode(value),
       ) as OpenAI.ChatCompletionChunk;
       chunk.choices.forEach((choice) => {
         strs[choice.index] =
