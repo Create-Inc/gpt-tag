@@ -258,6 +258,7 @@ export type GPTTagMetadata<Options extends GPTOptions> = {
   debug?: Options["debug"];
   instance?: OpenAI;
   maxTokens?: number;
+  responseFormat?: OpenAI.Chat.ChatCompletionCreateParams['response_format'];
 };
 
 export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
@@ -431,6 +432,16 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
       n: Options["n"];
       returns: Options["returns"];
       variables: Options["variables"];
+      stop: Options["stop"];
+    }>;
+    responseFormat<N extends OpenAI.Chat.ChatCompletionCreateParams['response_format'] = OpenAI.Chat.ChatCompletionCreateParams['response_format']>(
+      responseFormat: N,
+    ): GPTString<{
+      debug: Options["debug"];
+      stream: Options["stream"];
+      n: Options["n"];
+      variables: Options["variables"];
+      returns: Options["returns"];
       stop: Options["stop"];
     }>;
     maxTokens<N extends number = number>(

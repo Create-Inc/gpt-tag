@@ -10,7 +10,7 @@
     "gpt-3",
     "gpt-4"
   ],
-  "version": "0.0.7",
+  "version": "0.0.8",
   "license": "MIT",
   "exports": {
     ".": {
@@ -59,16 +59,16 @@
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
     "libnpmsearch": "^7.0.1",
-    "openai": "^4.28.0",
+    "openai": "^4.67.2",
     "pacote": "^17.0.6",
     "ts-morph": "^21.0.1",
     "ts-node": "^10.9.2",
     "tsup": "^8.0.2",
     "tsx": "~4.7.1",
     "typescript": "^5.3.3",
-    "zod": "^3.22.4"
+    "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "openai": "^4.0.0"
+    "openai": "^4.67.2"
   }
 }
