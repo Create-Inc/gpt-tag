@@ -434,6 +434,16 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
       variables: Options["variables"];
       stop: Options["stop"];
     }>;
+    responseFormat<N extends OpenAI.Chat.ChatCompletionCreateParams['response_format'] = OpenAI.Chat.ChatCompletionCreateParams['response_format']>(
+      responseFormat: N,
+    ): GPTString<{
+      debug: Options["debug"];
+      stream: Options["stream"];
+      n: Options["n"];
+      variables: Options["variables"];
+      returns: Options["returns"];
+      stop: Options["stop"];
+    }>;
     maxTokens<N extends number = number>(
       maxTokens: N,
     ): GPTString<{
