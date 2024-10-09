@@ -159,11 +159,11 @@ const makeGPTTag = <
           return resolve({ data: openAIChatStream, response });
         }
 
-        const choices = (
-          await instance.chat.completions.create({ ...args })
-        ).choices
+        const { data, response } = await instance.chat.completions.create({ ...args }).withResponse()
+        const choices = data.choices
           .slice(0, metadata.n ?? 1)
           .map(({ message }) => message.content);
+
         if (n === undefined) {
           const { parse } = this;
           const originalValue = choices[0] ?? null;
@@ -185,7 +185,7 @@ const makeGPTTag = <
           });
 
           // @ts-ignore
-          return resolve(value);
+          return resolve({ data: value, response });
         } else {
           const { parse } = this;
           const parsedValues = parse
@@ -210,8 +210,9 @@ const makeGPTTag = <
           this.callStack = [];
           this.arrCallStack = [];
           this.parse = undefined;
+
           // @ts-ignore
-          return resolve(value);
+          return resolve({ data: value, response });
         }
       } catch (error) {
         reject(error);

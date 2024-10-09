@@ -60,7 +60,7 @@ export const getValueFromTagChild = async <Options extends GPTOptions>(
     return `${child}`;
   } else if (typeof child === "function") {
     if (isGPTString<Options>(child)) {
-      return `${await child.stream(false).get(input as GetOptions<Options>)}`;
+      return `${(await child.stream(false).get(input as GetOptions<Options>)).data}`;
     }
     return `${await getValueFromTagChild(child())}`;
   } else {
