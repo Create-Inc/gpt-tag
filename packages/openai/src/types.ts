@@ -1,4 +1,5 @@
 import type { OpenAI } from "openai";
+import { APIPromise } from "openai/core.mjs";
 
 export interface Var<T extends string = string> {
   _isGptVariable: true;
@@ -186,12 +187,17 @@ export type AsyncIterableOpenAIStreamReturnTypes =
   | AsyncIterable<OpenAI.Chat.ChatCompletionChunk>
   | AsyncIterable<OpenAI.Completion>;
 
+type WithResponse<T> = {
+  data: T,
+  response: Awaited<ReturnType<APIPromise<OpenAI.Chat.Completions.ChatCompletionChunk>['withResponse']>>['response']
+}
+
 export type GetReturn<Options extends GPTOptions> =
-  Options["stream"] extends true
+  WithResponse<Options["stream"] extends true
     ? AsyncIterableOpenAIStreamReturnTypes
     : Options["n"] extends undefined
       ? Options["returns"]
-      : Options["returns"][];
+      : Options["returns"][]>;
 
 export type GetOptions<Options extends GPTOptions> = {
   variables: Record<

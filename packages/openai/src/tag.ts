@@ -106,11 +106,11 @@ const makeGPTTag = <
         };
         const stream = metadata.stream;
         if (!!stream) {
-          const openAIChatStream = await instance.chat.completions.create({
+          const { data: openAIChatStream, response } = await instance.chat.completions.create({
             ...args,
             messages,
             stream: true,
-          });
+          }).withResponse();
           if (evaluations.length) {
             const [originalStream, streamForEvals] = openAIChatStream.tee();
             originalStream.controller.signal.addEventListener("abort", (ev) => {
@@ -154,9 +154,9 @@ const makeGPTTag = <
 
             // @ts-ignore
             streamForEvals.toReadableStream().pipeTo(transformStream);
-            return resolve(originalStream);
+            return resolve({ data: originalStream, response });
           }
-          return resolve(openAIChatStream);
+          return resolve({ data: openAIChatStream, response });
         }
 
         const choices = (
