@@ -259,6 +259,7 @@ export type GPTTagMetadata<Options extends GPTOptions> = {
   instance?: OpenAI;
   maxTokens?: number;
   responseFormat?: OpenAI.Chat.ChatCompletionCreateParams['response_format'];
+  streamOptions?: OpenAI.Chat.ChatCompletionCreateParams['stream_options'];
 };
 
 export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
@@ -292,6 +293,9 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
     metadata: GPTTagMetadata<Options>;
     temperature(
       temperature: NonNullable<GPTTagMetadata<Options>["temperature"]>,
+    ): GPTString<Options>;
+    streamOptions(
+      temperature: NonNullable<GPTTagMetadata<Options>["streamOptions"]>,
     ): GPTString<Options>;
     model(model: GPTTagMetadata<Options>["model"]): GPTString<Options>;
     /**
