@@ -77,7 +77,7 @@ const makeGPTTag = <
   gpt.arrCallStack = new Array<{ method: string; args: any[] }>();
   gpt.callStack = new Array<{ method: string; args: any[] }>();
   gpt.parse = metadata.parse;
-  gpt.get = async function (
+  gpt.getWithResponse = async function (
     this: GPTString<Options>,
     input: GetOptions<Options> | undefined,
   ) {
@@ -101,15 +101,16 @@ const makeGPTTag = <
           messages,
           max_tokens: maxTokens,
           stop,
-          response_format: metadata.responseFormat
+          response_format: metadata.responseFormat,
         };
         const stream = metadata.stream;
         if (!!stream) {
-          const openAIChatStream = await instance.chat.completions.create({
+          const { data: openAIChatStream, response } = await instance.chat.completions.create({
             ...args,
             messages,
             stream: true,
-          });
+            stream_options: metadata.streamOptions
+          }).withResponse();
           if (evaluations.length) {
             const [originalStream, streamForEvals] = openAIChatStream.tee();
             originalStream.controller.signal.addEventListener("abort", (ev) => {
@@ -153,16 +154,16 @@ const makeGPTTag = <
 
             // @ts-ignore
             streamForEvals.toReadableStream().pipeTo(transformStream);
-            return resolve(originalStream);
+            return resolve({ data: originalStream, response });
           }
-          return resolve(openAIChatStream);
+          return resolve({ data: openAIChatStream, response });
         }
 
-        const choices = (
-          await instance.chat.completions.create({ ...args })
-        ).choices
+        const { data, response } = await instance.chat.completions.create({ ...args }).withResponse()
+        const choices = data.choices
           .slice(0, metadata.n ?? 1)
           .map(({ message }) => message.content);
+
         if (n === undefined) {
           const { parse } = this;
           const originalValue = choices[0] ?? null;
@@ -184,7 +185,7 @@ const makeGPTTag = <
           });
 
           // @ts-ignore
-          return resolve(value);
+          return resolve({ data: value, response });
         } else {
           const { parse } = this;
           const parsedValues = parse
@@ -209,8 +210,9 @@ const makeGPTTag = <
           this.callStack = [];
           this.arrCallStack = [];
           this.parse = undefined;
+
           // @ts-ignore
-          return resolve(value);
+          return resolve({ data: value, response });
         }
       } catch (error) {
         reject(error);
@@ -218,6 +220,12 @@ const makeGPTTag = <
     });
     return this.cachedRun;
   };
+  gpt.get = async function (
+    this: GPTString<Options>,
+    input: GetOptions<Options> | undefined,
+  ) {
+    return (await this.getWithResponse(input)).data
+  }
 
   gpt.metadata = Object.assign({}, metadata || {});
   gpt.id = (id: string) => {
@@ -226,6 +234,10 @@ const makeGPTTag = <
   };
   gpt.temperature = (temperature: number) => {
     const tag = makeGPTTag<Options>({ ...gpt.metadata, temperature });
+    return tag;
+  };
+  gpt.streamOptions = (streamOptions: OpenAI.Chat.ChatCompletionCreateParams['stream_options']) => {
+    const tag = makeGPTTag<Options>({ ...gpt.metadata, streamOptions });
     return tag;
   };
   gpt.responseFormat = (responseFormat: OpenAI.Chat.ChatCompletionCreateParams['response_format']) => {

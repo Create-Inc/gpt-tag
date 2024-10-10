@@ -57,13 +57,20 @@ content: ${content}`;
     })
     .join("\n\n");
   if (stream) {
-    return getTestStreamFromResponse(
-      `\n  \n${input.replace(/^/gm, "  # ")}\n`,
-    ) as unknown as Stream<ChatCompletionChunk>;
+    return {
+      withResponse:() => ({
+        data: getTestStreamFromResponse(`\n  \n${input.replace(/^/gm, "  # ")}\n`) as unknown as Stream<ChatCompletionChunk>
+
+      })
+    }
   }
-  return openAICompletionFactory({
-    content: `\n  \n${input.replace(/^/gm, "  # ")}\n`,
-  });
+  return {
+    withResponse: () => ({
+      data: openAICompletionFactory({
+        content: `\n  \n${input.replace(/^/gm, "  # ")}\n`,
+      })
+    })
+  }
 }
 
 const mockOpenAI = jest.mocked(
@@ -102,8 +109,11 @@ describe("smoke tests", () => {
   });
 
   it("should get contents from mock OpenAI", async () => {
-    mockOpenAI.chat.completions.create.mockResolvedValue(
-      openAICompletionFactory({ content: "Hello, how are you?" }),
+    mockOpenAI.chat.completions.create.mockReturnValue(
+      {
+        //@ts-expect-error
+        withResponse: jest.fn().mockResolvedValue({ data: openAICompletionFactory({ content: "Hello, how are you?" })})
+      }
     );
     const base = openai.instance(mockOpenAI);
     const result = await base`hi`.get();
@@ -115,8 +125,11 @@ describe("smoke tests", () => {
       delayMs: 2,
     });
 
-    mockOpenAI.chat.completions.create.mockResolvedValue(
-      stream as unknown as Stream<ChatCompletionChunk>,
+    mockOpenAI.chat.completions.create.mockReturnValue(
+      {
+        //@ts-expect-error
+        withResponse: jest.fn().mockResolvedValue({ data: stream})
+      }
     );
 
     const base = openai.instance(mockOpenAI).stream(true);
@@ -132,8 +145,11 @@ describe("smoke tests", () => {
       delayMs: 2,
     });
 
-    mockOpenAI.chat.completions.create.mockResolvedValue(
-      stream as unknown as Stream<ChatCompletionChunk>,
+    mockOpenAI.chat.completions.create.mockReturnValue(
+      {
+        //@ts-expect-error
+        withResponse: jest.fn().mockResolvedValue({ data: stream})
+      }
     );
 
     const base = openai
@@ -160,7 +176,7 @@ describe("smoke tests", () => {
     const lengthFn = Promise.resolve(`500 words`);
     expect(
       await processStream(
-        await message.get({
+        (await message.get({
           variables: {
             language,
             topic: topicFn,
@@ -171,7 +187,7 @@ describe("smoke tests", () => {
             // not defined, it will throw an error
             tone: base.user`Which tone should I use when talking to a ${variable("age")} year old? Respond with only a single word`,
           },
-        }),
+        })),
       ),
     ).toMatchInlineSnapshot(`
 "
@@ -208,5 +224,23 @@ describe("smoke tests", () => {
     ).rejects.toMatchInlineSnapshot(
       `[Error: "topic" variable was not specified]`,
     );
+  });
+  it("should get contents using withResponse", async () => {
+    const stream = getTestStreamFromResponse("Hello, how are you?", {
+      delayMs: 2,
+    });
+
+    mockOpenAI.chat.completions.create.mockReturnValue(
+      {
+        //@ts-expect-error
+        withResponse: jest.fn().mockResolvedValue({ data: stream, response: new Response()})
+      }
+    );
+
+    const base = openai.instance(mockOpenAI).stream(true);
+    const { data: result, response } = await base`hi`.getWithResponse();
+    const processedResult = await processStream(result);
+    expect(processedResult).toMatchInlineSnapshot(`"Hello, how are you?"`);
+    expect(response).toBeInstanceOf(Response)
   });
 });

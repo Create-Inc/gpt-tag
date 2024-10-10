@@ -1,4 +1,5 @@
 import type { OpenAI } from "openai";
+import { APIPromise } from "openai/core.mjs";
 
 export interface Var<T extends string = string> {
   _isGptVariable: true;
@@ -186,12 +187,19 @@ export type AsyncIterableOpenAIStreamReturnTypes =
   | AsyncIterable<OpenAI.Chat.ChatCompletionChunk>
   | AsyncIterable<OpenAI.Completion>;
 
+type WithResponse<T> = {
+  data: T,
+  response: Awaited<ReturnType<APIPromise<OpenAI.Chat.Completions.ChatCompletionChunk>['withResponse']>>['response']
+}
+
 export type GetReturn<Options extends GPTOptions> =
   Options["stream"] extends true
     ? AsyncIterableOpenAIStreamReturnTypes
     : Options["n"] extends undefined
       ? Options["returns"]
       : Options["returns"][];
+
+export type GetReturnWithResponse<Options extends GPTOptions> = WithResponse<GetReturn<Options>>;
 
 export type GetOptions<Options extends GPTOptions> = {
   variables: Record<
@@ -202,16 +210,18 @@ export type GetOptions<Options extends GPTOptions> = {
 
 export type GptStringImplementation<Options extends GPTOptions> = {
   _isGptString: true;
-  cachedRun?: Promise<GetReturn<Options>>;
+  cachedRun?: Promise<GetReturnWithResponse<Options>>;
   parse?: ParseFunction<Options["returns"]>;
   callStack: { method: string; args: any[] }[];
   arrCallStack: { method: string; args: any[] }[];
 } & (Options["variables"] extends []
   ? {
+      getWithResponse(): Promise<GetReturnWithResponse<Options>>;
       get(): Promise<GetReturn<Options>>;
     }
   : {
-      get(options: GetOptions<Options>): Promise<GetReturn<Options>>;
+      getWithResponse(options: GetOptions<Options> | undefined): Promise<GetReturnWithResponse<Options>>;
+      get(options: GetOptions<Options> | undefined): Promise<GetReturn<Options>>;
     });
 
 export type ParseFunction<ReturnValue = unknown> = (
@@ -259,6 +269,7 @@ export type GPTTagMetadata<Options extends GPTOptions> = {
   instance?: OpenAI;
   maxTokens?: number;
   responseFormat?: OpenAI.Chat.ChatCompletionCreateParams['response_format'];
+  streamOptions?: OpenAI.Chat.ChatCompletionCreateParams['stream_options'];
 };
 
 export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
@@ -292,6 +303,9 @@ export type GPTString<Options extends GPTOptions> = GptStringImplementation<{
     metadata: GPTTagMetadata<Options>;
     temperature(
       temperature: NonNullable<GPTTagMetadata<Options>["temperature"]>,
+    ): GPTString<Options>;
+    streamOptions(
+      temperature: NonNullable<GPTTagMetadata<Options>["streamOptions"]>,
     ): GPTString<Options>;
     model(model: GPTTagMetadata<Options>["model"]): GPTString<Options>;
     /**
