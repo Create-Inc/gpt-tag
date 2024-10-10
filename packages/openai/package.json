@@ -10,7 +10,7 @@
     "gpt-3",
     "gpt-4"
   ],
-  "version": "0.0.10",
+  "version": "0.0.11-alpha.0",
   "license": "MIT",
   "exports": {
     ".": {
