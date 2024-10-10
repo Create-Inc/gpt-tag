@@ -102,7 +102,6 @@ const makeGPTTag = <
           max_tokens: maxTokens,
           stop,
           response_format: metadata.responseFormat,
-          stream_options: metadata.streamOptions
         };
         const stream = metadata.stream;
         if (!!stream) {
@@ -110,6 +109,7 @@ const makeGPTTag = <
             ...args,
             messages,
             stream: true,
+            stream_options: metadata.streamOptions
           }).withResponse();
           if (evaluations.length) {
             const [originalStream, streamForEvals] = openAIChatStream.tee();
