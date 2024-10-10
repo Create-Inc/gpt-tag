@@ -193,11 +193,13 @@ type WithResponse<T> = {
 }
 
 export type GetReturn<Options extends GPTOptions> =
-  WithResponse<Options["stream"] extends true
+  Options["stream"] extends true
     ? AsyncIterableOpenAIStreamReturnTypes
     : Options["n"] extends undefined
       ? Options["returns"]
-      : Options["returns"][]>;
+      : Options["returns"][];
+
+export type GetReturnWithResponse<Options extends GPTOptions> = WithResponse<GetReturn<Options>>;
 
 export type GetOptions<Options extends GPTOptions> = {
   variables: Record<
@@ -208,16 +210,18 @@ export type GetOptions<Options extends GPTOptions> = {
 
 export type GptStringImplementation<Options extends GPTOptions> = {
   _isGptString: true;
-  cachedRun?: Promise<GetReturn<Options>>;
+  cachedRun?: Promise<GetReturnWithResponse<Options>>;
   parse?: ParseFunction<Options["returns"]>;
   callStack: { method: string; args: any[] }[];
   arrCallStack: { method: string; args: any[] }[];
 } & (Options["variables"] extends []
   ? {
+      getWithResponse(): Promise<GetReturnWithResponse<Options>>;
       get(): Promise<GetReturn<Options>>;
     }
   : {
-      get(options: GetOptions<Options>): Promise<GetReturn<Options>>;
+      getWithResponse(options: GetOptions<Options> | undefined): Promise<GetReturnWithResponse<Options>>;
+      get(options: GetOptions<Options> | undefined): Promise<GetReturn<Options>>;
     });
 
 export type ParseFunction<ReturnValue = unknown> = (

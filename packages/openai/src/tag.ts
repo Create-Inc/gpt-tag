@@ -77,7 +77,7 @@ const makeGPTTag = <
   gpt.arrCallStack = new Array<{ method: string; args: any[] }>();
   gpt.callStack = new Array<{ method: string; args: any[] }>();
   gpt.parse = metadata.parse;
-  gpt.get = async function (
+  gpt.getWithResponse = async function (
     this: GPTString<Options>,
     input: GetOptions<Options> | undefined,
   ) {
@@ -220,6 +220,12 @@ const makeGPTTag = <
     });
     return this.cachedRun;
   };
+  gpt.get = async function (
+    this: GPTString<Options>,
+    input: GetOptions<Options> | undefined,
+  ) {
+    return (await this.getWithResponse(input)).data
+  }
 
   gpt.metadata = Object.assign({}, metadata || {});
   gpt.id = (id: string) => {

@@ -116,7 +116,7 @@ describe("smoke tests", () => {
       }
     );
     const base = openai.instance(mockOpenAI);
-    const { data: result } = await base`hi`.get();
+    const result = await base`hi`.get();
     expect(result).toMatchInlineSnapshot(`"Hello, how are you?"`);
   });
 
@@ -133,7 +133,7 @@ describe("smoke tests", () => {
     );
 
     const base = openai.instance(mockOpenAI).stream(true);
-    const { data: result } = await base`hi`.get();
+    const result = await base`hi`.get();
     const response = await processStream(result);
     expect(response).toMatchInlineSnapshot(`"Hello, how are you?"`);
   });
@@ -156,7 +156,7 @@ describe("smoke tests", () => {
       .instance(mockOpenAI)
       .stream(true)
       .addEvaluation(evaluation);
-    const {data: result } = await base`hi`.get();
+    const result = await base`hi`.get();
     const response = await processStream(result);
     expect(response).toMatchInlineSnapshot(`"Hello, how are you?"`);
     await new Promise(process.nextTick);
@@ -187,7 +187,7 @@ describe("smoke tests", () => {
             // not defined, it will throw an error
             tone: base.user`Which tone should I use when talking to a ${variable("age")} year old? Respond with only a single word`,
           },
-        })).data,
+        })),
       ),
     ).toMatchInlineSnapshot(`
 "
@@ -224,5 +224,23 @@ describe("smoke tests", () => {
     ).rejects.toMatchInlineSnapshot(
       `[Error: "topic" variable was not specified]`,
     );
+  });
+  it("should get contents using withResponse", async () => {
+    const stream = getTestStreamFromResponse("Hello, how are you?", {
+      delayMs: 2,
+    });
+
+    mockOpenAI.chat.completions.create.mockReturnValue(
+      {
+        //@ts-expect-error
+        withResponse: jest.fn().mockResolvedValue({ data: stream, response: new Response()})
+      }
+    );
+
+    const base = openai.instance(mockOpenAI).stream(true);
+    const { data: result, response } = await base`hi`.getWithResponse();
+    const processedResult = await processStream(result);
+    expect(processedResult).toMatchInlineSnapshot(`"Hello, how are you?"`);
+    expect(response).toBeInstanceOf(Response)
   });
 });
