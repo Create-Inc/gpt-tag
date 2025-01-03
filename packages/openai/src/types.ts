@@ -1,5 +1,6 @@
 import type { OpenAI } from "openai";
 import { APIPromise } from "openai/core.mjs";
+import { ChatCompletionTool } from "openai/resources/index.mjs";
 
 export interface Var<T extends string = string> {
   _isGptVariable: true;
@@ -260,6 +261,7 @@ export type GPTTagMetadata<Options extends GPTOptions> = {
   id?: string;
   temperature?: number;
   messages: Message[];
+  tools: ChatCompletionTool[];
   model?: OpenAI.Chat.ChatCompletionCreateParams["model"];
   n?: Options["n"];
   parse?: ParseFunction<Options["returns"]>;

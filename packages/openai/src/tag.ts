@@ -16,7 +16,7 @@ import {
 } from "./utils.js";
 import { getMessageFromInput } from "./_unsafeUtils.js";
 import { DEFAULT_MODEL } from "./constants.js";
-import { ChatCompletionMessageParam } from "openai/resources/index";
+import { ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/index";
 
 let DEFAULT_OPENAI_INSTANCE: OpenAI;
 const getDefaultOpenAIInstance = () => {
@@ -41,6 +41,7 @@ const makeGPTTag = <
 >(
   metadata: GPTTagMetadata<Options> = {
     messages: [],
+    tools: [],
   },
 ): GPTString<Options> => {
   const addMessage = (message: MessageInput<Options>) => {
@@ -94,11 +95,14 @@ const makeGPTTag = <
             getOpenAIMessageParamFromMessage(message, input),
           ),
         );
+        const tools = metadata.tools ?? [];
         const args: OpenAI.ChatCompletionCreateParamsNonStreaming = {
           temperature: metadata.temperature,
           model: metadata.model ?? DEFAULT_MODEL,
           n: n ?? 1,
           messages,
+          tools,
+          ...(tools.length ? { tool_choice: 'auto' }: {}),
           max_tokens: maxTokens,
           stop,
           response_format: metadata.responseFormat,
@@ -107,7 +111,6 @@ const makeGPTTag = <
         if (!!stream) {
           const { data: openAIChatStream, response } = await instance.chat.completions.create({
             ...args,
-            messages,
             stream: true,
             stream_options: metadata.streamOptions
           }).withResponse();
@@ -256,6 +259,17 @@ const makeGPTTag = <
       messages: [
         ...(gpt.metadata.messages ?? []),
         ...messages.map((message) => getMessageFromInput(message)),
+      ],
+    });
+    return tag;
+  };
+
+  gpt.addTools = (tools: ChatCompletionTool[]) => {
+    const tag = makeGPTTag<Options>({
+      ...gpt.metadata,
+      tools: [
+        ...(gpt.metadata.tools ?? []),
+        ...tools,
       ],
     });
     return tag;
